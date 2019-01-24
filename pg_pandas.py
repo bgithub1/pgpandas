@@ -169,7 +169,22 @@ class PgPandas(object):
         conn.execute(docs.update().where(docs.c.id == bindparam('_id')).values(value_dict),listToWrite)
         sess.commit()
         sess.close()
-    
+
+    def create_df_doc_binary_from_path_list(self,document_path_list,return_full_file_path=False):
+        """
+        Return a pandas DataFrame with 2 columns. 1 to hold binary blob data, and another to hold file names with or without the full path.
+        
+        :param document_path_list: a list of paths to binary files, the contents of which will be written to each row of the return DataFrame
+        :param return_full_file_path: if True, return the full path to the binary blob file in the column file_path
+        """
+        df_doc_binary = pd.DataFrame({'document_name':document_path_list,'document_binary':[None for _ in range(len(document_path_list))]})
+        def _row_loop(row):
+            path_to_binary = row.document_name
+            with open(path_to_binary, mode='rb') as f: # b is important -> binary
+                doc_binary = f.read()
+                return bytearray(doc_binary)
+        df_doc_binary['document_binary'] = df_doc_binary.apply(_row_loop,axis=1)
+        return df_doc_binary   
 
     def df_to_excel(self,df_list,xlsx_path,sheet_name_list=None):
         writer = pd.ExcelWriter(xlsx_path)
@@ -197,7 +212,6 @@ class PgPandas(object):
             file_name_adaptor=None):
         """
         Write a group of binary files to an output folder, given an sql statements
-        :param engine:
         :param sql:
         :param blob_field_name:
         :param file_name_field_name:
@@ -236,7 +250,6 @@ class PgPandas(object):
             file_name_adaptor=None):
         """
         Write a group of binary files to an output folder, given an sql statements
-        :param engine:
         :param sql:
         :param blob_field_name:
         :param file_name_field_name:
