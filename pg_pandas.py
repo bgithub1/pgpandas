@@ -1,7 +1,7 @@
 '''
 Created on Aug 22, 2016
 
-@author: bperlman1
+@author: Bill Perlman
 general access to postgres via pandas and sqlalchemy
 ''' 
 
